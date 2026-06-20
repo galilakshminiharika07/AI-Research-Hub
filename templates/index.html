@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Research Pulse - Latest AI & ML Insights</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- App Container -->
+    <div class="app-container">
+        
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-logo-section">
+                <div class="logo-icon-wrapper">
+                    <i class="fa-solid fa-bolt-lightning pulse-logo-icon"></i>
+                </div>
+                <div class="logo-text-wrapper">
+                    <h1>AI Research <span class="gradient-text">Pulse</span></h1>
+                    <p class="tagline">Real-time updates from arXiv, MIT, & Berkeley AI Research</p>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="stats-badge" id="statsBadge">
+                    <span class="pulse-dot"></span>
+                    <span id="articleCount">0</span> updates loaded
+                </div>
+                <div class="last-updated-text" id="lastUpdatedContainer">
+                    Last updated: <span id="lastUpdatedTime">Never</span>
+                </div>
+                <button class="btn btn-refresh" id="refreshBtn" title="Fetch latest research">
+                    <i class="fa-solid fa-arrows-rotate refresh-icon" id="refreshIcon"></i>
+                    <span>Sync Feeds</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Dashboard Layout -->
+        <main class="dashboard-main">
+            <!-- Filter & Search Bar Section -->
+            <section class="controls-section">
+                <div class="search-sort-wrapper">
+                    <div class="search-input-wrapper">
+                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                        <input type="text" id="searchInput" placeholder="Search by title, abstract, or author..." aria-label="Search updates">
+                        <button class="clear-search-btn" id="clearSearchBtn" aria-label="Clear search">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="dropdowns-group">
+                        <div class="select-wrapper">
+                            <label for="sourceSelect">Source</label>
+                            <select id="sourceSelect">
+                                <option value="all">All Sources</option>
+                                <option value="arXiv">arXiv</option>
+                                <option value="MIT News">MIT News</option>
+                                <option value="Berkeley AI Research">Berkeley AI Research</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down select-chevron"></i>
+                        </div>
+                        
+                        <div class="select-wrapper">
+                            <label for="sortSelect">Sort By</label>
+                            <select id="sortSelect">
+                                <option value="latest">Latest First</option>
+                                <option value="oldest">Oldest First</option>
+                                <option value="az">A-Z (Title)</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down select-chevron"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Category Pills (Horizontal Scroll) -->
+                <div class="category-filters-container">
+                    <div class="scroll-fade fade-left"></div>
+                    <div class="category-pills-wrapper" id="categoryPillsWrapper">
+                        <button class="category-pill active" data-category="all">
+                            <i class="fa-solid fa-border-all"></i> All Topics
+                        </button>
+                        <button class="category-pill" data-category="Machine Learning">
+                            <i class="fa-solid fa-brain"></i> Machine Learning
+                        </button>
+                        <button class="category-pill" data-category="Natural Language Processing">
+                            <i class="fa-solid fa-comment-dots"></i> NLP
+                        </button>
+                        <button class="category-pill" data-category="Computer Vision">
+                            <i class="fa-solid fa-eye"></i> Computer Vision
+                        </button>
+                        <button class="category-pill" data-category="AI Ethics & Governance">
+                            <i class="fa-solid fa-scale-balanced"></i> Ethics & Safety
+                        </button>
+                        <button class="category-pill" data-category="Robotics & Control">
+                            <i class="fa-solid fa-robot"></i> Robotics
+                        </button>
+                        <button class="category-pill" data-category="Reinforcement Learning">
+                            <i class="fa-solid fa-gamepad"></i> Reinforcement Learning
+                        </button>
+                    </div>
+                    <div class="scroll-fade fade-right"></div>
+                </div>
+            </section>
+
+            <!-- Cards Container -->
+            <section class="cards-section">
+                <!-- Grid Container -->
+                <div class="cards-grid" id="cardsGrid">
+                    <!-- Skeleton loaders will go here initially -->
+                </div>
+                
+                <!-- No Results State -->
+                <div class="no-results-state hidden" id="noResultsState">
+                    <div class="no-results-icon-wrapper">
+                        <i class="fa-regular fa-folder-open"></i>
+                    </div>
+                    <h3>No matching research updates</h3>
+                    <p>Try adjusting your search keywords, filters, or refresh the feed to fetch new data.</p>
+                    <button class="btn btn-secondary" id="resetFiltersBtn">Reset Filters</button>
+                </div>
+            </section>
+        </main>
+        
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>&copy; 2026 AI Research Pulse. Premium Dashboard Built with Flask, vanilla HTML/CSS & JS.</p>
+        </footer>
+
+        <!-- Side Drawer: Research Copilot -->
+        <div class="drawer-overlay" id="drawerOverlay"></div>
+        <aside class="copilot-drawer" id="copilotDrawer">
+            <div class="drawer-header">
+                <div class="drawer-header-title">
+                    <i class="fa-solid fa-wand-magic-sparkles copilot-icon"></i>
+                    <h2>Research Copilot</h2>
+                </div>
+                <button class="close-drawer-btn" id="closeDrawerBtn" aria-label="Close drawer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="drawer-content" id="drawerContent">
+                <!-- Drawer Tab Navigation -->
+                <div class="drawer-tabs-wrapper">
+                    <button class="drawer-tab active" data-tab="details" id="tabBtnDetails">
+                        <i class="fa-solid fa-circle-info"></i> Abstract Details
+                    </button>
+                    <button class="drawer-tab" data-tab="generator" id="tabBtnGenerator">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> AI Generator
+                    </button>
+                </div>
+
+                <!-- Pane 1: Abstract Details -->
+                <div class="tab-pane active" id="detailsPane">
+                    <div class="article-details-card">
+                        <div class="details-badges">
+                            <span class="badge badge-source" id="drawerSource">Source</span>
+                            <span class="badge badge-category" id="drawerCategory">Category</span>
+                        </div>
+                        <h3 id="drawerTitle">Research Title</h3>
+                        
+                        <div class="details-meta">
+                            <div class="meta-item">
+                                <i class="fa-regular fa-user"></i>
+                                <span id="drawerAuthors">Authors</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fa-regular fa-calendar"></i>
+                                <span id="drawerDate">Date</span>
+                            </div>
+                        </div>
+                        
+                        <div class="details-abstract">
+                            <h4>Abstract / Summary</h4>
+                            <div class="abstract-text-container">
+                                <p id="drawerAbstract">Abstract body text goes here...</p>
+                            </div>
+                        </div>
+                        
+                        <a href="#" target="_blank" class="read-original-link" id="drawerOriginalLink">
+                            <span>Read original publication</span>
+                            <i class="fa-solid fa-up-right-from-square"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Pane 2: AI Generator Controls & Output -->
+                <div class="tab-pane" id="generatorPane">
+                    <!-- Generator Control Panel -->
+                    <div class="generator-panel">
+                        <div class="panel-section-title">
+                            <i class="fa-solid fa-gear"></i>
+                            <h3>Content Generation Options</h3>
+                        </div>
+                        
+                        <!-- Tone Selector -->
+                        <div class="control-group">
+                            <label class="control-label">Select Tone</label>
+                            <div class="option-cards-grid" id="toneGrid">
+                                <button class="option-card active" data-tone="professional">
+                                    <div class="option-card-icon"><i class="fa-solid fa-briefcase"></i></div>
+                                    <div class="option-card-label">Professional</div>
+                                    <div class="option-card-desc">Polished, insightful post focused on business impact</div>
+                                </button>
+                                <button class="option-card" data-tone="enthusiast">
+                                    <div class="option-card-icon"><i class="fa-solid fa-fire"></i></div>
+                                    <div class="option-card-label">Enthusiast</div>
+                                    <div class="option-card-desc">Exciting, high-energy tldr style with emojis</div>
+                                </button>
+                                <button class="option-card" data-tone="academic">
+                                    <div class="option-card-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+                                    <div class="option-card-label">Academic</div>
+                                    <div class="option-card-desc">Formal literature review summarizing methodology</div>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Format Selector -->
+                        <div class="control-group">
+                            <label class="control-label">Output Format</label>
+                            <div class="option-cards-grid" id="formatGrid">
+                                <button class="option-card active" data-format="linkedin">
+                                    <div class="option-card-icon"><i class="fa-brands fa-linkedin-in"></i></div>
+                                    <div class="option-card-label">LinkedIn Post</div>
+                                    <div class="option-card-desc">Ready-to-share post with hooks and hashtags</div>
+                                </button>
+                                <button class="option-card" data-format="exec">
+                                    <div class="option-card-icon"><i class="fa-regular fa-file-lines"></i></div>
+                                    <div class="option-card-label">Exec Summary</div>
+                                    <div class="option-card-desc">Structured, executive briefing overview</div>
+                                </button>
+                                <button class="option-card" data-format="takeaways">
+                                    <div class="option-card-icon"><i class="fa-solid fa-list-check"></i></div>
+                                    <div class="option-card-label">Key Takeaways</div>
+                                    <div class="option-card-desc">Actionable, structured bullet-point items</div>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Generate CTA -->
+                        <button class="btn btn-primary btn-generate" id="generateBtn">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>Generate Copilot Output</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Output Text Area Container -->
+                    <div class="output-container hidden" id="outputContainer">
+                        <div class="output-header">
+                            <h4>Generated Output</h4>
+                            <div class="output-actions">
+                                <button class="btn-icon" id="copyBtn" title="Copy to clipboard">
+                                    <i class="fa-regular fa-copy"></i>
+                                    <span>Copy</span>
+                                </button>
+                                <button class="btn-icon" id="downloadBtn" title="Download as text file">
+                                    <i class="fa-solid fa-download"></i>
+                                    <span>Save</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="output-box-wrapper">
+                            <textarea id="outputTextArea" readonly placeholder="Output will appear here..."></textarea>
+                            <!-- Typing / Progress Indicator -->
+                            <div class="generation-loader hidden" id="generationLoader">
+                                <div class="loader-wave">
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </div>
+                                <p>Synthesizing research abstract...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Main JavaScript App -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
